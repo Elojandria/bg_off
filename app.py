@@ -12,7 +12,7 @@ load_dotenv()
 REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
 REPLICATE_MODEL = "men1scus/birefnet"
-REPLICATE_VERSION = "acdf9c6b04b0ce7f8bbda7745f841b325530160a3fe2f58eecf229f78c8107e1"
+REPLICATE_VERSION = "f74986db0355b58403ed20963af156525e2891ea3c2d499bfbfb2a28cd87c5d7"
 
 client = replicate.Client(api_token=REPLICATE_API_TOKEN)
 
@@ -55,7 +55,6 @@ def upload():
     if not input_files:
         return "No se encontraron imágenes válidas para procesar.", 400
 
-    # Procesamiento con espera
     for image_path in input_files:
         try:
             with open(image_path, "rb") as img_file:
@@ -64,28 +63,29 @@ def upload():
                     input={"image": img_file}
                 )
 
-            # Espera activa a que termine el modelo
+            # Esperar a que se complete
             while prediction.status not in ["succeeded", "failed", "canceled"]:
                 time.sleep(1)
                 prediction.reload()
 
             if prediction.status == "succeeded" and prediction.output:
-                output_url = prediction.output
+                output_url = prediction.output  # Ya es un string
                 response = requests.get(output_url)
                 if response.status_code == 200:
                     filename = os.path.basename(image_path)
                     output_path = os.path.join(output_dir, filename)
                     with open(output_path, "wb") as out_file:
                         out_file.write(response.content)
+                    print(f"✅ Imagen guardada: {output_path}")
                 else:
-                    print(f"❌ Falló la descarga de {output_url}")
+                    print(f"❌ Falló la descarga desde Replicate: {output_url}")
             else:
-                print(f"❌ Falló el procesamiento de {image_path}: {prediction.status}")
+                print(f"❌ Falló la predicción para {image_path}: {prediction.status}")
 
         except Exception as e:
-            print(f"⚠️ Error con {image_path}: {e}")
+            print(f"⚠️ Error procesando {image_path}: {e}")
 
-    # Crear el ZIP
+    # Comprimir ZIP
     result_zip = os.path.join(temp_dir, "result.zip")
     with zipfile.ZipFile(result_zip, 'w') as zipf:
         for f in os.listdir(output_dir):
