@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Subir Imágenes</title>
+    <meta charset="UTF-8">
+    <title>Sube tus imágenes</title>
 </head>
 <body>
-  <h2>Sube tu archivo ZIP con imágenes</h2>
-  <form action="/" method="post" enctype="multipart/form-data">
-    <input type="file" name="archivo" accept=".zip" required>
-    <button type="submit">Subir y procesar</button>
-  </form>
+    <h2>Sube imágenes sueltas o un archivo ZIP</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label>Sube imágenes individuales o una carpeta:</label><br>
+        <input type="file" name="images" multiple webkitdirectory directory><br><br>
+
+        <label>O sube un archivo .zip:</label><br>
+        <input type="file" name="zipfile"><br><br>
+
+        <input type="submit" value="Procesar">
+    </form>
 </body>
 </html>
