@@ -3,6 +3,7 @@ import zipfile
 import tempfile
 import replicate
 import requests
+import time
 
 from flask import Flask, render_template, request, send_file
 from dotenv import load_dotenv
@@ -29,7 +30,7 @@ def upload():
 
     input_files = []
 
-    # Detectar si subieron un ZIP
+    # Archivos .zip
     zip_file = request.files.get('zipfile')
     if zip_file and zip_file.filename.endswith('.zip'):
         zip_path = os.path.join(temp_dir, "upload.zip")
@@ -43,7 +44,7 @@ def upload():
             if f.lower().endswith(('.png', '.jpg', '.jpeg'))
         ]
 
-    # Detectar si subieron archivos sueltos (1 o más)
+    # Archivos individuales
     uploaded_files = request.files.getlist('images')
     for file in uploaded_files:
         if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -54,22 +55,37 @@ def upload():
     if not input_files:
         return "No se encontraron imágenes válidas para procesar.", 400
 
-    # Procesar imágenes
+    # Procesamiento con espera
     for image_path in input_files:
-        with open(image_path, "rb") as img_file:
-            try:
-                prediction = client.run(
-                    f"{REPLICATE_MODEL}:{REPLICATE_VERSION}",
+        try:
+            with open(image_path, "rb") as img_file:
+                prediction = client.predictions.create(
+                    version=REPLICATE_VERSION,
                     input={"image": img_file}
                 )
-                response = requests.get(prediction["output"])
-                output_path = os.path.join(output_dir, os.path.basename(image_path))
-                with open(output_path, "wb") as out_img:
-                    out_img.write(response.content)
-            except Exception as e:
-                print(f"Error procesando {image_path}: {e}")
 
-    # Crear ZIP final
+            # Espera activa a que termine el modelo
+            while prediction.status not in ["succeeded", "failed", "canceled"]:
+                time.sleep(1)
+                prediction.reload()
+
+            if prediction.status == "succeeded" and prediction.output:
+                output_url = prediction.output
+                response = requests.get(output_url)
+                if response.status_code == 200:
+                    filename = os.path.basename(image_path)
+                    output_path = os.path.join(output_dir, filename)
+                    with open(output_path, "wb") as out_file:
+                        out_file.write(response.content)
+                else:
+                    print(f"❌ Falló la descarga de {output_url}")
+            else:
+                print(f"❌ Falló el procesamiento de {image_path}: {prediction.status}")
+
+        except Exception as e:
+            print(f"⚠️ Error con {image_path}: {e}")
+
+    # Crear el ZIP
     result_zip = os.path.join(temp_dir, "result.zip")
     with zipfile.ZipFile(result_zip, 'w') as zipf:
         for f in os.listdir(output_dir):
