@@ -7,17 +7,14 @@ import requests
 from flask import Flask, render_template, request, send_file
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde Render o archivo .env
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 
-# Configuración Replicate
 REPLICATE_MODEL = "men1scus/birefnet"
 REPLICATE_VERSION = "acdf9c6b04b0ce7f8bbda7745f841b325530160a3fe2f58eecf229f78c8107e1"
 
 client = replicate.Client(api_token=REPLICATE_API_TOKEN)
 
-# Flask
 app = Flask(__name__)
 
 @app.route('/')
@@ -30,29 +27,34 @@ def upload():
     output_dir = os.path.join(temp_dir, "output")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Caso 1: ZIP
-    if 'zipfile' in request.files and request.files['zipfile'].filename.endswith('.zip'):
-        zip_file = request.files['zipfile']
+    input_files = []
+
+    # Detectar si subieron un ZIP
+    zip_file = request.files.get('zipfile')
+    if zip_file and zip_file.filename.endswith('.zip'):
         zip_path = os.path.join(temp_dir, "upload.zip")
         zip_file.save(zip_path)
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(temp_dir)
 
-        input_files = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        input_files += [
+            os.path.join(temp_dir, f) for f in os.listdir(temp_dir)
+            if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+        ]
 
-    # Caso 2: Imágenes sueltas
-    elif 'images' in request.files:
-        uploaded = request.files.getlist('images')
-        input_files = []
-        for img in uploaded:
-            file_path = os.path.join(temp_dir, img.filename)
-            img.save(file_path)
+    # Detectar si subieron archivos sueltos (1 o más)
+    uploaded_files = request.files.getlist('images')
+    for file in uploaded_files:
+        if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            file_path = os.path.join(temp_dir, file.filename)
+            file.save(file_path)
             input_files.append(file_path)
-    else:
-        return "No se detectó archivo válido", 400
 
-    # Procesar cada imagen
+    if not input_files:
+        return "No se encontraron imágenes válidas para procesar.", 400
+
+    # Procesar imágenes
     for image_path in input_files:
         with open(image_path, "rb") as img_file:
             try:
@@ -60,15 +62,14 @@ def upload():
                     f"{REPLICATE_MODEL}:{REPLICATE_VERSION}",
                     input={"image": img_file}
                 )
-                # Descargar imagen procesada (fondo eliminado)
                 response = requests.get(prediction["output"])
                 output_path = os.path.join(output_dir, os.path.basename(image_path))
                 with open(output_path, "wb") as out_img:
                     out_img.write(response.content)
             except Exception as e:
-                print(f"❌ Error procesando {image_path}: {e}")
+                print(f"Error procesando {image_path}: {e}")
 
-    # Comprimir salida
+    # Crear ZIP final
     result_zip = os.path.join(temp_dir, "result.zip")
     with zipfile.ZipFile(result_zip, 'w') as zipf:
         for f in os.listdir(output_dir):
