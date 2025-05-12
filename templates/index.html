@@ -15,5 +15,14 @@
 
         <input type="submit" value="Procesar">
     </form>
+        <form method="POST" enctype="multipart/form-data" action="/upload">
+          <label>Subir imágenes sueltas:</label>
+          <input type="file" name="images" accept=".jpg,.jpeg,.png" multiple>
+        
+          <p>O subir un .zip:</p>
+          <input type="file" name="zipfile" accept=".zip">
+        
+          <button type="submit">Procesar</button>
+        </form>
 </body>
 </html>
