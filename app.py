@@ -23,12 +23,19 @@ def index():
     return render_template("index.html")
 
 @app.route('/upload', methods=['POST'])
-def upload():
-    temp_dir = tempfile.mkdtemp()
-    output_dir = os.path.join(temp_dir, "output")
-    os.makedirs(output_dir, exist_ok=True)
-
-    input_files = []
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    
+    # Verifica si el archivo es de tipo válido
+    if file and file.filename.endswith(('png', 'jpg', 'jpeg', 'webp')):
+        # Procesa el archivo aquí (eliminar fondo, etc.)
+        file_path = os.path.join('uploads', file.filename)
+        file.save(file_path)
+        return jsonify({"message": "Archivo subido y procesado", "filename": file.filename}), 200
+    else:
+        return jsonify({"error": "Archivo inválido"}), 400
 
     # Archivos .zip
     zip_file = request.files.get('zipfile')
