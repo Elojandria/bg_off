@@ -106,7 +106,6 @@ result_zip = os.path.join(temp_dir, "result.zip")
 with zipfile.ZipFile(result_zip, 'w') as zipf:
     for f in os.listdir(output_dir):
         zipf.write(os.path.join(output_dir, f), arcname=f)
-
 return send_file(result_zip, as_attachment=True)
 
 if __name__ == "__main__":
