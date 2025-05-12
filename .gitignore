@@ -2,5 +2,4 @@ uploads/
 resultados/
 static/
 __pycache__/
-*.zip
 .env
