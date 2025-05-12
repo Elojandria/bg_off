@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quita Fondo</title>
+  <title>BG off</title>
   <link rel="icon" href="/favicon.ico" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -11,7 +11,7 @@
 
   <!-- Encabezado -->
   <header class="w-full max-w-2xl text-center my-8">
-    <h1 class="text-3xl font-bold">Quita Fondo</h1>
+    <h1 class="text-3xl font-bold">BG off</h1>
     <p class="text-sm text-gray-600">Elimina el fondo de tus imágenes con un clic</p>
   </header>
 
@@ -19,13 +19,19 @@
   <main class="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-6">
     <form id="uploadForm" class="space-y-4">
       
-      <!-- Carga de archivo -->
+      <!-- Carga de archivo de imagen-->
       <label class="block">
         <span class="text-gray-700">Selecciona una imagen:</span>
-        <input  type="file" accept=".jpg,.jpeg,.png,.webp"
+        <input  type="file" accept=".jpg,.jpeg,.png,.webp" multiple
                class="mt-1 block w-full file:py-2 file:px-4 file:border file:rounded-xl file:bg-blue-500 file:text-white hover:file:bg-blue-600"/>
       </label>
-
+      <!-- Carga de archivo de zip -->
+       <label class="block">
+        <span class="text-gray-700">Ó selecciona un .zip:</span>
+        <input  type="file" name="zipfile" accept=".zip" 
+               class="mt-1 block w-full file:py-2 file:px-4 file:border file:rounded-xl file:bg-blue-500 file:text-white hover:file:bg-blue-600"/>
+      </label>
+      
       <!-- Botón de subir -->
       <button type="submit"
               class="w-full bg-green-500 text-white py-2 px-4 rounded-xl hover:bg-green-600 transition">
