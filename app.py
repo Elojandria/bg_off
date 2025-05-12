@@ -101,6 +101,14 @@ def download_file(filename):
     except FileNotFoundError:
         return "Archivo no encontrado", 404
 
+# Código para crear el archivo ZIP
+result_zip = os.path.join(temp_dir, "result.zip")
+with zipfile.ZipFile(result_zip, 'w') as zipf:
+    for f in os.listdir(output_dir):
+        zipf.write(os.path.join(output_dir, f), arcname=f)
+
+return send_file(result_zip, as_attachment=True)
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
