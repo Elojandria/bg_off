@@ -86,12 +86,13 @@ def upload():
             print(f"⚠️ Error procesando {image_path}: {e}")
 
     # Comprimir ZIP
-    result_zip = os.path.join(temp_dir, "result.zip")
-    with zipfile.ZipFile(result_zip, 'w') as zipf:
-        for f in os.listdir(output_dir):
-            zipf.write(os.path.join(output_dir, f), arcname=f)
-
-    return send_file(result_zip, as_attachment=True)
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    try:
+        file_path = os.path.join('path_to_processed_files', filename)  # Ruta donde guardas el archivo
+        return send_file(file_path, as_attachment=True, download_name=filename)
+    except FileNotFoundError:
+        return "Archivo no encontrado", 404
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
