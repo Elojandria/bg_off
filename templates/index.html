@@ -41,6 +41,10 @@
       <div id="message" class="text-center text-sm mt-2 hidden"></div>
     </form>
   </main>
+     <!-- Botón de descarga -->
+    <button id="downloadButton" class="bg-blue-500 text-white py-2 px-6 rounded-xl mt-4 hidden">
+      Descargar imagen procesada
+    </button>
 
   <!-- Footer -->
   <footer class="mt-auto py-4 text-xs text-gray-500">
@@ -74,6 +78,21 @@
       }, 2000);
     });
   </script>
+  <!-- Script para descargar las imagenes -->
+  <script>
+  // Suponiendo que el backend ya procesó y subió la imagen
+  const processedImageName = 'imagen_sin_fondo.png';  // O el nombre que hayas generado dinámicamente
+  const downloadUrl = `/download/${processedImageName}`;  // Ruta de Flask para descargar
+
+  // Mostrar el botón de descarga una vez que el procesamiento haya terminado
+  document.getElementById('downloadButton').addEventListener('click', function() {
+    window.location.href = downloadUrl;  // Esto hará que se inicie la descarga
+  });
+
+  // Hacer visible el botón de descarga después del procesamiento
+  // Esto debe activarse una vez que la imagen esté lista
+  document.getElementById('downloadButton').classList.remove('hidden');
+</script>
 
 </body>
 </html>
