@@ -107,7 +107,8 @@ def upload_file():
 @app.route('/download/<filename>', methods=['GET'])
 def download_file(filename):
     try:
-        file_path = os.path.join('path_to_processed_files', filename)  # Path where you save the file
+        file_path = os.path.join('path_to_processed_files', filename)
+        print(f"Attempting to download file from: {file_path}")  # Debugging line
         return send_file(file_path, as_attachment=True, download_name=filename)
     except FileNotFoundError:
         return "Archivo no encontrado", 404
