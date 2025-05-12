@@ -1,19 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Sube tus imágenes</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quita Fondo</title>
+  <link rel="icon" href="/favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Sube imágenes sueltas o un archivo ZIP</h2>
-        <form method="POST" enctype="multipart/form-data" action="/upload">
-          <label>Subir imágenes sueltas:</label>
-          <input type="file" name="images" accept=".jpg,.jpeg,.png" multiple>
-        
-          <p>O subir un .zip:</p>
-          <input type="file" name="zipfile" accept=".zip">
-        
-          <button type="submit">Procesar</button>
-        </form>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center min-h-screen p-4">
+
+  <!-- Encabezado -->
+  <header class="w-full max-w-2xl text-center my-8">
+    <h1 class="text-3xl font-bold">Quita Fondo</h1>
+    <p class="text-sm text-gray-600">Elimina el fondo de tus imágenes con un clic</p>
+  </header>
+
+  <!-- Contenedor principal -->
+  <main class="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-6">
+    <form id="uploadForm" class="space-y-4">
+      
+      <!-- Carga de archivo -->
+      <label class="block">
+        <span class="text-gray-700">Selecciona una imagen:</span>
+        <input type="file" name="image" accept="image/*"
+               class="mt-1 block w-full file:py-2 file:px-4 file:border file:rounded-xl file:bg-blue-500 file:text-white hover:file:bg-blue-600"/>
+      </label>
+
+      <!-- Botón de subir -->
+      <button type="submit"
+              class="w-full bg-green-500 text-white py-2 px-4 rounded-xl hover:bg-green-600 transition">
+        Quitar fondo
+      </button>
+
+      <!-- Barra de progreso -->
+      <div id="progressBar" class="w-full bg-gray-200 rounded-full h-4 hidden">
+        <div id="progressFill" class="bg-green-500 h-4 rounded-full transition-all duration-300" style="width: 0%;"></div>
+      </div>
+
+      <!-- Mensajes -->
+      <div id="message" class="text-center text-sm mt-2 hidden"></div>
+    </form>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto py-4 text-xs text-gray-500">
+    © 2025 Quita Fondo - Todos los derechos reservados
+  </footer>
+
+  <!-- Script para manejar progreso y mensajes -->
+  <script>
+    const form = document.getElementById('uploadForm');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      progressBar.classList.remove('hidden');
+      message.classList.add('hidden');
+      progressFill.style.width = '10%';
+
+      // Simulación de progreso (reemplazar con lógica real)
+      setTimeout(() => progressFill.style.width = '50%', 500);
+      setTimeout(() => progressFill.style.width = '100%', 1500);
+
+      // Simula respuesta (reemplaza con tu llamada a Replicate)
+      setTimeout(() => {
+        message.textContent = '✅ Imagen procesada con éxito.';
+        message.className = 'text-green-600 text-center text-sm mt-2';
+        message.classList.remove('hidden');
+        progressBar.classList.add('hidden');
+      }, 2000);
+    });
+  </script>
+
 </body>
 </html>
