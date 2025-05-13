@@ -43,7 +43,7 @@ def upload():
             if f.lower().endswith(('.png', '.jpg', '.jpeg'))
         ]
 
-    # Detectar si subieron archivos sueltos (1 o más)
+    # Detectar si subieron archivos sueltos
     uploaded_files = request.files.getlist('images')
     for file in uploaded_files:
         if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -52,6 +52,7 @@ def upload():
             input_files.append(file_path)
 
     if not input_files:
+        print("No se encontraron imágenes válidas.")
         return "No se encontraron imágenes válidas para procesar.", 400
 
     # Procesar imágenes
@@ -63,19 +64,21 @@ def upload():
                     f"{REPLICATE_MODEL}:{REPLICATE_VERSION}",
                     input={"image": img_file}
                 )
-                
-                # Verificar si "output" está presente en la respuesta
-                if "output" not in prediction or not prediction["output"]:
-                    print(f"Error: El modelo no devolvió una salida válida para la imagen {image_path}")
+                print("Predicción completa:", prediction)
+
+                # Revisar si el resultado es válido
+                output_url = prediction.get("output") if isinstance(prediction, dict) else prediction[0]
+                if not output_url:
+                    print(f"Error: No se encontró 'output' válido para {image_path}")
                     continue
 
-                # Descargar el archivo procesado
-                response = requests.get(prediction["output"])
+                # Descargar imagen procesada
+                response = requests.get(output_url)
                 if response.status_code != 200:
-                    print(f"Error al descargar la imagen procesada desde {prediction['output']}: {response.status_code}")
+                    print(f"Error al descargar desde {output_url}: código {response.status_code}")
                     continue
 
-                # Guardar la salida en el directorio "output"
+                # Guardar salida
                 output_path = os.path.join(output_dir, os.path.basename(image_path))
                 with open(output_path, "wb") as out_img:
                     out_img.write(response.content)
@@ -83,23 +86,28 @@ def upload():
             except Exception as e:
                 print(f"Error procesando {image_path}: {e}")
 
-    # Validar si se generaron resultados
-    if not os.listdir(output_dir):
-        print("No se generaron archivos en el directorio de salida.")
-        return "No se generaron resultados en el ZIP. Verifica las imágenes de entrada y el modelo de Replicate.", 500
+    # Validar si se generaron archivos
+    output_files = os.listdir(output_dir)
+    print("Archivos generados en output_dir:", output_files)
+    if not output_files:
+        return "No se generaron resultados. Verifica el modelo o las imágenes.", 500
 
     # Crear ZIP final
     result_zip = os.path.join(temp_dir, "result.zip")
     try:
         with zipfile.ZipFile(result_zip, 'w') as zipf:
-            for f in os.listdir(output_dir):
+            for f in output_files:
                 zipf.write(os.path.join(output_dir, f), arcname=f)
         print(f"Archivo ZIP generado: {result_zip}")
     except Exception as e:
-        print(f"Error al crear el archivo ZIP: {e}")
-        return "Ocurrió un error al generar el archivo ZIP.", 500
+        print(f"Error al crear ZIP: {e}")
+        return "Error al generar el archivo ZIP.", 500
 
-    return send_file(result_zip, as_attachment=True)
+    if not os.path.exists(result_zip):
+        print("ZIP no existe en el sistema de archivos.")
+        return "El archivo ZIP no fue generado.", 500
+
+    return send_file(result_zip, as_attachment=True, mimetype='application/zip')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
